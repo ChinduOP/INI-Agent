@@ -1,0 +1,6 @@
+{
+  "name": "INI Agent",
+  "description": "LangGraph orchestration engine that generates production-ready .ini configuration files from Excel documents and OneDrive templates.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
