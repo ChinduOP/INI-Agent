@@ -1,13 +1,15 @@
 import React from 'react';
-import { Plus, MessageSquare, PanelLeftClose, PanelLeft, FolderTree, Trash2, Bot, Sparkles } from 'lucide-react';
+import { Plus, MessageSquare, PanelLeftClose, PanelLeft, FolderTree, Trash2, Bot, Sparkles, Database } from 'lucide-react';
 import { useChatStore } from '../store/chatStore';
 
 export const Sidebar: React.FC = () => {
   const sessions = useChatStore(s => s.sessions);
   const activeSessionId = useChatStore(s => s.activeSessionId);
+  const activeView = useChatStore(s => s.activeView);
   const isSidebarCollapsed = useChatStore(s => s.isSidebarCollapsed);
   const createNewSession = useChatStore(s => s.createNewSession);
   const setActiveSession = useChatStore(s => s.setActiveSession);
+  const setActiveView = useChatStore(s => s.setActiveView);
   const toggleSidebar = useChatStore(s => s.toggleSidebar);
   const deleteSession = useChatStore(s => s.deleteSession);
   const setOneDriveModalOpen = useChatStore(s => s.setOneDriveModalOpen);
@@ -31,15 +33,17 @@ export const Sidebar: React.FC = () => {
           <Plus className="w-5 h-5" />
         </button>
 
-        <div className="flex-1" />
-
         <button
-          onClick={() => setOneDriveModalOpen(true)}
-          className="p-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
-          title="OneDrive Templates"
+          onClick={() => setActiveView('templates')}
+          className={`p-2.5 rounded-lg transition-colors ${
+            activeView === 'templates' ? 'bg-blue-600/20 text-blue-400' : 'text-gray-400 hover:text-white hover:bg-gray-800'
+          }`}
+          title="Template Manager"
         >
           <FolderTree className="w-5 h-5" />
         </button>
+
+        <div className="flex-1" />
       </div>
     );
   }
@@ -71,14 +75,26 @@ export const Sidebar: React.FC = () => {
         </button>
       </div>
 
-      {/* New Chat Button */}
-      <div className="p-3">
+      {/* New Chat & Template Manager Buttons */}
+      <div className="p-3 space-y-2">
         <button
           onClick={createNewSession}
           className="w-full flex items-center justify-start gap-2.5 px-3.5 py-2.5 rounded-xl bg-[#232323] hover:bg-[#2b2b2b] border border-gray-700 hover:border-gray-500 text-gray-100 text-sm font-medium transition-all shadow-sm group"
         >
           <Plus className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
           <span>New Chat</span>
+        </button>
+
+        <button
+          onClick={() => setActiveView('templates')}
+          className={`w-full flex items-center justify-start gap-2.5 px-3.5 py-2.5 rounded-xl border transition-all shadow-sm group text-sm font-medium ${
+            activeView === 'templates'
+              ? 'bg-blue-600/10 border-blue-500/50 text-blue-400'
+              : 'bg-[#232323] hover:bg-[#2b2b2b] border-gray-700 hover:border-gray-500 text-gray-100'
+          }`}
+        >
+          <FolderTree className={`w-4 h-4 transition-transform group-hover:scale-110 ${activeView === 'templates' ? 'text-blue-400' : 'text-gray-400'}`} />
+          <span>Template Manager</span>
         </button>
       </div>
 
@@ -124,23 +140,12 @@ export const Sidebar: React.FC = () => {
         })}
       </div>
 
-      {/* Bottom OneDrive Template Trigger */}
+      {/* Bottom Footer Credits */}
       <div className="p-3 border-t border-gray-800 mt-auto">
-        <button
-          onClick={() => setOneDriveModalOpen(true)}
-          className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-blue-950/20 hover:bg-blue-950/30 border border-blue-900/40 text-blue-300 text-xs font-medium transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <FolderTree className="w-4 h-4 text-blue-400" />
-            <span>OneDrive Templates Link</span>
-          </div>
-          <span className="text-[10px] bg-blue-500/20 px-1.5 py-0.5 rounded font-mono text-blue-200">READ ONLY</span>
-        </button>
-
-        <div className="mt-3 px-2 text-[10px] text-gray-500 text-center flex items-center justify-center gap-2">
+        <div className="px-2 text-[10px] text-gray-500 text-center flex items-center justify-center gap-2">
           <span>Excel Analyzer</span>
           <span>•</span>
-          <span>Pydantic Auth Free</span>
+          <span>Direct Access</span>
         </div>
       </div>
     </div>

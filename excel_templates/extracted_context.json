@@ -1,0 +1,478 @@
+[
+  {
+    "Sheet": "Modules",
+    "ModuleType": {
+      "DCPReport": [
+        {
+          "Module_Item": 1,
+          "Module_Filename": "",
+          "Module_Key": "",
+          "Module_Class": "",
+          "Module_Namespace": "",
+          "Module_Name": "",
+          "Module_Description": "",
+          "Module_Usage": "",
+          "Module_Subusage": ""
+        },
+        {
+          "Module_Item": 2,
+          "Module_Filename": "",
+          "Module_Key": "",
+          "Module_Class": "",
+          "Module_Namespace": "",
+          "Module_Name": "",
+          "Module_Description": "",
+          "Module_Usage": "",
+          "Module_Subusage": ""
+        },
+        {
+          "Module_Item": 3,
+          "Module_Filename": "",
+          "Module_Key": "",
+          "Module_Class": "",
+          "Module_Namespace": "",
+          "Module_Name": "",
+          "Module_Description": "",
+          "Module_Usage": "",
+          "Module_Subusage": ""
+        }
+      ],
+
+      "DocumentReconciliation": [
+        {
+          "Module_Item": 1,
+          "Module_Filename": "",
+          "Module_Key": "",
+          "Module_Class": "",
+          "Module_Namespace": "",
+          "Module_Name": "",
+          "Module_Description": ""
+        },
+        {
+          "Module_Item": 2,
+          "Module_Filename": "",
+          "Module_Key": "",
+          "Module_Class": "",
+          "Module_Namespace": "",
+          "Module_Name": "",
+          "Module_Description": ""
+        },
+        {
+          "Module_Item": 3,
+          "Module_Filename": "",
+          "Module_Key": "",
+          "Module_Class": "",
+          "Module_Namespace": "",
+          "Module_Name": "",
+          "Module_Description": ""
+        }
+      ],
+
+      "EdiBatchParser": [
+        {
+          "Module_Item": 1,
+          "Module_Filename": "",
+          "Module_Key": "",
+          "Module_Class": "",
+          "Module_Namespace": "",
+          "Module_Name": "",
+          "Module_Description": ""
+        },
+        {
+          "Module_Item": 2,
+          "Module_Filename": "",
+          "Module_Key": "",
+          "Module_Class": "",
+          "Module_Namespace": "",
+          "Module_Name": "",
+          "Module_Description": ""
+        },
+        {
+          "Module_Item": 3,
+          "Module_Filename": "",
+          "Module_Key": "",
+          "Module_Class": "",
+          "Module_Namespace": "",
+          "Module_Name": "",
+          "Module_Description": ""
+        }
+      ],
+
+      "EdiBatchCreator": [
+        {
+          "Module_Item": 1,
+          "Module_Filename": "",
+          "Module_Key": "",
+          "Module_Class": "",
+          "Module_Namespace": "",
+          "Module_Name": "",
+          "Module_Description": ""
+        },
+        {
+          "Module_Item": 2,
+          "Module_Filename": "",
+          "Module_Key": "",
+          "Module_Class": "",
+          "Module_Namespace": "",
+          "Module_Name": "",
+          "Module_Description": ""
+        },
+        {
+          "Module_Item": 3,
+          "Module_Filename": "",
+          "Module_Key": "",
+          "Module_Class": "",
+          "Module_Namespace": "",
+          "Module_Name": "",
+          "Module_Description": ""
+        }
+      ],
+
+      "Reports": [
+        {
+          "Module_Item": 1,
+          "Module_Filename": "",
+          "Module_Key": "",
+          "Module_Class": "",
+          "Module_Namespace": "",
+          "Module_Name": "",
+          "Module_Description": ""
+        },
+        {
+          "Module_Item": 2,
+          "Module_Filename": "",
+          "Module_Key": "",
+          "Module_Class": "",
+          "Module_Namespace": "",
+          "Module_Name": "",
+          "Module_Description": ""
+        },
+        {
+          "Module_Item": 3,
+          "Module_Filename": "",
+          "Module_Key": "",
+          "Module_Class": "",
+          "Module_Namespace": "",
+          "Module_Name": "",
+          "Module_Description": ""
+        }
+      ]
+    }
+  },
+
+  {
+    "Sheet": "EDI",
+    "EDI_Channel": "",
+
+    "EDI_Direction_In": [
+      {
+        "EDI_Item": 1,
+        "EDI_Filename": "",
+        "EDI_Group": "",
+        "EDI_Subgroup": "",
+        "EDI_Subtype": "",
+        "EDI_Classification": "",
+        "EDI_Key": "",
+        "EDI_Module": "",
+        "EDI_Syntax": "",
+        "EDI_APRF": "",
+        "EDI_Address(Live[Test])": "",
+        "EDI_ValidateDocs": null,
+        "EDI_FunctionAck(FA)Module": "",
+        "EDI_Details": {
+          "EDI_Interchange_Version": "",
+          "EDI_Interchange_RepChar": "",
+          "EDI_Group_Code": "",
+          "EDI_Group_Agency": "",
+          "EDI_Group_Version": "",
+          "EDI_Message_Code": ""
+        }
+      },
+      {
+        "EDI_Item": 2,
+        "EDI_Filename": "",
+        "EDI_Group": "",
+        "EDI_Subgroup": "",
+        "EDI_Subtype": "",
+        "EDI_Classification": "",
+        "EDI_Key": "",
+        "EDI_Module": "",
+        "EDI_Syntax": "",
+        "EDI_APRF": "",
+        "EDI_Address(Live[Test])": "",
+        "EDI_ValidateDocs": null,
+        "EDI_FunctionAck(FA)Module": "",
+        "EDI_Details": {
+          "EDI_Interchange_Version": "",
+          "EDI_Interchange_RepChar": "",
+          "EDI_Group_Code": "",
+          "EDI_Group_Agency": "",
+          "EDI_Group_Version": "",
+          "EDI_Message_Code": ""
+        }
+      },
+      {
+        "EDI_Item": 3,
+        "EDI_Filename": "",
+        "EDI_Group": "",
+        "EDI_Subgroup": "",
+        "EDI_Subtype": "",
+        "EDI_Classification": "",
+        "EDI_Key": "",
+        "EDI_Module": "",
+        "EDI_Syntax": "",
+        "EDI_APRF": "",
+        "EDI_Address(Live[Test])": "",
+        "EDI_ValidateDocs": null,
+        "EDI_FunctionAck(FA)Module": "",
+        "EDI_Details": {
+          "EDI_Interchange_Version": "",
+          "EDI_Interchange_RepChar": "",
+          "EDI_Group_Code": "",
+          "EDI_Group_Agency": "",
+          "EDI_Group_Version": "",
+          "EDI_Message_Code": ""
+        }
+      }
+    ],
+
+    "EDI_Direction_Out": [
+      {
+        "EDI_Item": 1,
+        "EDI_Filename": "",
+        "EDI_Group": "",
+        "EDI_Subgroup": "",
+        "EDI_Subtype": "",
+        "EDI_Classification": "",
+        "EDI_Key": "",
+        "EDI_Module": "",
+        "EDI_Syntax": "",
+        "EDI_APRF": "",
+        "EDI_Address(Live[Test])": "",
+        "EDI_ValidateDocs": null,
+        "EDI_FunctionAck(FA)Module": "",
+        "EDI_Details": {
+          "EDI_Interchange_Version": "",
+          "EDI_Interchange_RepChar": "",
+          "EDI_Group_Code": "",
+          "EDI_Group_Agency": "",
+          "EDI_Group_Version": "",
+          "EDI_Message_Code": ""
+        }
+      },
+      {
+        "EDI_Item": 2,
+        "EDI_Filename": "",
+        "EDI_Group": "",
+        "EDI_Subgroup": "",
+        "EDI_Subtype": "",
+        "EDI_Classification": "",
+        "EDI_Key": "",
+        "EDI_Module": "",
+        "EDI_Syntax": "",
+        "EDI_APRF": "",
+        "EDI_Address(Live[Test])": "",
+        "EDI_ValidateDocs": null,
+        "EDI_FunctionAck(FA)Module": "",
+        "EDI_Details": {
+          "EDI_Interchange_Version": "",
+          "EDI_Interchange_RepChar": "",
+          "EDI_Group_Code": "",
+          "EDI_Group_Agency": "",
+          "EDI_Group_Version": "",
+          "EDI_Message_Code": ""
+        }
+      },
+      {
+        "EDI_Item": 3,
+        "EDI_Filename": "",
+        "EDI_Group": "",
+        "EDI_Subgroup": "",
+        "EDI_Subtype": "",
+        "EDI_Classification": "",
+        "EDI_Key": "",
+        "EDI_Module": "",
+        "EDI_Syntax": "",
+        "EDI_APRF": "",
+        "EDI_Address(Live[Test])": "",
+        "EDI_ValidateDocs": null,
+        "EDI_FunctionAck(FA)Module": "",
+        "EDI_Details": {
+          "EDI_Interchange_Version": "",
+          "EDI_Interchange_RepChar": "",
+          "EDI_Group_Code": "",
+          "EDI_Group_Agency": "",
+          "EDI_Group_Version": "",
+          "EDI_Message_Code": ""
+        }
+      }
+    ]
+  },
+
+  {
+    "Sheet": "Document",
+    "Document_Channel": "",
+
+    "Document_Direction_In": [
+      {
+		"Document_Item": 1,
+        "Document_Direction": "",
+        "Document_Filename": "",
+        "Document_Document": "",
+        "Document_Classification": "",
+        "Document_Function": "",
+        "Document_Subtype": "",
+        "Document_Key": "",
+        "Document_Routing": "",
+        "Document_Splitting": "",
+        "Document_ProfileLookup": "",
+        "Document_XrefLevel": "",
+        "Document_Reconcile": "",
+        "Document_EDIProfile": "",
+        "Document_DisplayText": "",
+        "Document_Workflow": "",
+        "Document_FilenameSuffix": "",
+        "Document_Validate": "",
+        "Document_ValidationFile": "",
+        "Document_ValidationDescription": "",
+        "Document_Report": "",
+        "Document_PrintOnly": "",
+        "Document_Export": "",
+        "Document_Hide": ""
+      },
+      {
+		"Document_Item": 2,
+        "Document_Direction": "",
+        "Document_Filename": "",
+        "Document_Document": "",
+        "Document_Classification": "",
+        "Document_Function": "",
+        "Document_Subtype": "",
+        "Document_Key": "",
+        "Document_Routing": "",
+        "Document_Splitting": "",
+        "Document_ProfileLookup": "",
+        "Document_XrefLevel": "",
+        "Document_Reconcile": "",
+        "Document_EDIProfile": "",
+        "Document_DisplayText": "",
+        "Document_Workflow": "",
+        "Document_FilenameSuffix": "",
+        "Document_Validate": "",
+        "Document_ValidationFile": "",
+        "Document_ValidationDescription": "",
+        "Document_Report": "",
+        "Document_PrintOnly": "",
+        "Document_Export": "",
+        "Document_Hide": ""
+      },
+      {
+		"Document_Item": 3,
+        "Document_Direction": "",
+        "Document_Filename": "",
+        "Document_Document": "",
+        "Document_Classification": "",
+        "Document_Function": "",
+        "Document_Subtype": "",
+        "Document_Key": "",
+        "Document_Routing": "",
+        "Document_Splitting": "",
+        "Document_ProfileLookup": "",
+        "Document_XrefLevel": "",
+        "Document_Reconcile": "",
+        "Document_EDIProfile": "",
+        "Document_DisplayText": "",
+        "Document_Workflow": "",
+        "Document_FilenameSuffix": "",
+        "Document_Validate": "",
+        "Document_ValidationFile": "",
+        "Document_ValidationDescription": "",
+        "Document_Report": "",
+        "Document_PrintOnly": "",
+        "Document_Export": "",
+        "Document_Hide": ""
+      }
+    ],
+
+    "Document_Direction_Out": [
+      {
+		"Document_Item": 1,
+        "Document_Direction": "",
+        "Document_Filename": "",
+        "Document_Document": "",
+        "Document_Classification": "",
+        "Document_Function": "",
+        "Document_Subtype": "",
+        "Document_Key": "",
+        "Document_Routing": "",
+        "Document_Splitting": "",
+        "Document_ProfileLookup": "",
+        "Document_XrefLevel": "",
+        "Document_Reconcile": "",
+        "Document_EDIProfile": "",
+        "Document_DisplayText": "",
+        "Document_Workflow": "",
+        "Document_FilenameSuffix": "",
+        "Document_Validate": "",
+        "Document_ValidationFile": "",
+        "Document_ValidationDescription": "",
+        "Document_Report": "",
+        "Document_PrintOnly": "",
+        "Document_Export": "",
+        "Document_Hide": ""
+      },
+      {
+		"Document_Item": 2,
+        "Document_Direction": "",
+        "Document_Filename": "",
+        "Document_Document": "",
+        "Document_Classification": "",
+        "Document_Function": "",
+        "Document_Subtype": "",
+        "Document_Key": "",
+        "Document_Routing": "",
+        "Document_Splitting": "",
+        "Document_ProfileLookup": "",
+        "Document_XrefLevel": "",
+        "Document_Reconcile": "",
+        "Document_EDIProfile": "",
+        "Document_DisplayText": "",
+        "Document_Workflow": "",
+        "Document_FilenameSuffix": "",
+        "Document_Validate": "",
+        "Document_ValidationFile": "",
+        "Document_ValidationDescription": "",
+        "Document_Report": "",
+        "Document_PrintOnly": "",
+        "Document_Export": "",
+        "Document_Hide": ""
+      },
+      {
+		"Document_Item": 3,
+        "Document_Direction": "",
+        "Document_Filename": "",
+        "Document_Document": "",
+        "Document_Classification": "",
+        "Document_Function": "",
+        "Document_Subtype": "",
+        "Document_Key": "",
+        "Document_Routing": "",
+        "Document_Splitting": "",
+        "Document_ProfileLookup": "",
+        "Document_XrefLevel": "",
+        "Document_Reconcile": "",
+        "Document_EDIProfile": "",
+        "Document_DisplayText": "",
+        "Document_Workflow": "",
+        "Document_FilenameSuffix": "",
+        "Document_Validate": "",
+        "Document_ValidationFile": "",
+        "Document_ValidationDescription": "",
+        "Document_Report": "",
+        "Document_PrintOnly": "",
+        "Document_Export": "",
+        "Document_Hide": ""
+      }
+    ]
+  }
+]

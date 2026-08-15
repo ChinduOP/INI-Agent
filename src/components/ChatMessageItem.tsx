@@ -3,11 +3,11 @@ import { Bot, User, FileSpreadsheet, Sparkles } from 'lucide-react';
 import { ChatMessage } from '../../server/graph/state.js';
 import { NotepadViewer } from './NotepadViewer';
 
-interface MessageProps {
+interface ChatMessageItemProps {
   message: ChatMessage;
 }
 
-export const Message: React.FC<MessageProps> = ({ message }) => {
+export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message }) => {
   const isAssistant = message.role === 'assistant';
 
   // Helper to format text markdown bullet points nicely
@@ -57,7 +57,7 @@ export const Message: React.FC<MessageProps> = ({ message }) => {
 
   return (
     <div className={`w-full py-6 px-4 sm:px-6 flex gap-4 transition-colors ${
-      isAssistant ? 'bg-[#212121]' : 'bg-[#181818]'
+      isAssistant ? 'bg-[#212121]' : 'bg-[#181818] flex-row-reverse'
     }`}>
       {/* Avatar */}
       <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-white shadow-md ${
@@ -73,8 +73,8 @@ export const Message: React.FC<MessageProps> = ({ message }) => {
       </div>
 
       {/* Content Container */}
-      <div className="flex-1 max-w-3xl overflow-hidden pt-0.5">
-        <div className="flex items-center gap-2 mb-1.5">
+      <div className={`flex-1 overflow-hidden pt-0.5 flex flex-col ${isAssistant ? '' : 'items-end'} w-full max-w-full`}>
+        <div className={`flex items-center gap-2 mb-1.5 ${isAssistant ? '' : 'flex-row-reverse'}`}>
           <span className="text-xs font-semibold tracking-wide text-gray-300">
             {isAssistant ? 'INI Agent' : 'You'}
           </span>
@@ -86,7 +86,7 @@ export const Message: React.FC<MessageProps> = ({ message }) => {
         </div>
 
         {/* Message body */}
-        <div className="text-gray-100 font-sans break-words">
+        <div className={`text-gray-100 font-sans break-words ${isAssistant ? '' : 'text-right'}`}>
           {renderFormattedContent(message.content)}
         </div>
 
@@ -103,8 +103,11 @@ export const Message: React.FC<MessageProps> = ({ message }) => {
         )}
 
         {/* Generated INI Viewer */}
-        {message.generatedIni && (
-          <NotepadViewer result={message.generatedIni} />
+        {message.generatedInis && message.generatedInis.length > 0 && (
+          <NotepadViewer results={message.generatedInis} />
+        )}
+        {!message.generatedInis && message.generatedIni && (
+          <NotepadViewer results={[message.generatedIni]} />
         )}
       </div>
     </div>

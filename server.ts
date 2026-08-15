@@ -10,10 +10,12 @@ import { ExcelService } from "./server/services/excel_service.js";
 import { onedriveService } from "./server/services/onedrive_service.js";
 import { LangGraphEngine } from "./server/graph/graph.js";
 
-dotenv.config();
+import { LlmService } from "./server/services/llm_service.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+dotenv.config({ override: true });
+
+const _filename = typeof __filename !== 'undefined' ? __filename : fileURLToPath(import.meta.url || 'file://' + process.cwd() + '/server.ts');
+const _dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(_filename);
 
 const uploadsDir = path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadsDir)) {
@@ -44,6 +46,16 @@ async function startServer() {
   // 1. Health check
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", service: "INI Agent LangGraph Backend" });
+  });
+
+  // 1.5 AI Configuration Status
+  app.get("/api/ai/status", async (req, res) => {
+    try {
+      const isConfigured = await LlmService.testConnection();
+      res.json(isConfigured);
+    } catch (e: any) {
+      res.json({ success: false, message: e.message || "Unknown error connecting to AI" });
+    }
   });
 
   // 2. Upload Excel file
@@ -108,6 +120,257 @@ async function startServer() {
     res.json({ activeFile: currentUploadedExcel });
   });
 
+  // 4.5 Get active upload parsed data
+  app.get("/api/upload/data", async (req, res) => {
+    try {
+      if (!currentUploadedExcel) {
+        // Fallback to reading the extracted_context.json file
+        const templatePath = path.join(process.cwd(), "excel_templates", "extracted_context.json");
+        if (fs.existsSync(templatePath)) {
+          const content = fs.readFileSync(templatePath, "utf-8");
+          const data = JSON.parse(content);
+          return res.json({ success: true, data });
+        }
+        return res.json({ success: false, message: "No active uploaded Excel file and default context missing" });
+      }
+      const parsed = await ExcelService.parseExcelFile(currentUploadedExcel.path);
+      const extracted = ExcelService.extractExcelToJson(parsed);
+      const uiCompatible = ExcelService.convertSchemaJsonToUiFormat(extracted);
+      res.json({ success: true, data: uiCompatible, schemaData: extracted });
+    } catch (err: any) {
+      console.error("Error fetching active Excel data:", err);
+      res.status(500).json({ error: err.message || "Failed to parse active Excel" });
+    }
+  });
+
+  // Helper to determine the template folder path (defaulting to ONEDRIVE_TEMPLATES_LINK from .env)
+  function getTemplateFolder(queryDir?: any, forDisplay = false): string {
+    if (queryDir && String(queryDir).trim()) {
+      const q = String(queryDir).trim();
+      if (!q.startsWith("http://") && !q.startsWith("https://")) {
+        if (forDisplay) {
+          return q.replace(/\\\\/g, '\\').replace(/\\/g, '\\');
+        }
+        return q.replace(/\\/g, '/').replace(/\/+/g, '/');
+      }
+    }
+    let link = process.env.ONEDRIVE_TEMPLATES_LINK || "ini_templates";
+    link = link.replace(/^["']|["']$/g, '').trim();
+    if (link.startsWith("http://") || link.startsWith("https://")) {
+      return "ini_templates";
+    }
+    if (forDisplay) {
+      return link.replace(/\\\\/g, '\\').replace(/\\/g, '\\');
+    }
+    return link.replace(/\\/g, '/').replace(/\/+/g, '/');
+  }
+
+  // API to get template folder configuration
+  app.get("/api/templates/config", (req, res) => {
+    try {
+      const defaultDir = getTemplateFolder(undefined, true);
+      res.json({ success: true, defaultDir });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Helper to generate a tree recursively for local templates
+  function getFilesTree(dirPath: string, rootDir: string, currentId = "1"): any[] {
+    try {
+      if (!fs.existsSync(dirPath)) {
+        return [];
+      }
+      const items = fs.readdirSync(dirPath);
+      const nodes: any[] = [];
+      
+      let index = 1;
+      for (const item of items) {
+        if (item === 'node_modules' || item === '.git' || item === 'dist' || item === '.aistudio') {
+          continue;
+        }
+        const fullPath = path.join(dirPath, item);
+        const relativePath = path.relative(rootDir, fullPath);
+        const stats = fs.statSync(fullPath);
+        const id = `${currentId}-${index}`;
+        index++;
+
+        if (stats.isDirectory()) {
+          const children = getFilesTree(fullPath, rootDir, id);
+          nodes.push({
+            id,
+            name: item,
+            type: 'folder',
+            path: relativePath,
+            isOpen: true,
+            children
+          });
+        } else {
+          const ext = path.extname(item).toLowerCase().replace('.', '');
+          // Read content only if it's an editable text file (like .ini, .sql, .txt, .json, .md)
+          let content = '';
+          if (['ini', 'sql', 'txt', 'json', 'md'].includes(ext)) {
+            content = fs.readFileSync(fullPath, 'utf-8');
+          }
+          nodes.push({
+            id,
+            name: item,
+            type: 'file',
+            fileType: ext === 'sql' ? 'sql' : 'ini',
+            content,
+            path: relativePath
+          });
+        }
+      }
+      return nodes;
+    } catch (err) {
+      console.error("Error generating files tree:", err);
+      return [];
+    }
+  }
+
+  // Helper to copy directory recursively
+  function copyDirectoryRecursive(srcDir: string, destDir: string) {
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+    const items = fs.readdirSync(srcDir);
+    for (const item of items) {
+      const srcPath = path.join(srcDir, item);
+      const destPath = path.join(destDir, item);
+      if (fs.statSync(srcPath).isDirectory()) {
+        copyDirectoryRecursive(srcPath, destPath);
+      } else {
+        fs.copyFileSync(srcPath, destPath);
+      }
+    }
+  }
+
+  // API to list template files in a configured folder path
+  app.get("/api/templates/list", (req, res) => {
+    try {
+      const qDir = getTemplateFolder(req.query.dir);
+      const resolvedDir = path.isAbsolute(qDir) ? qDir : path.resolve(process.cwd(), qDir);
+      
+      if (!fs.existsSync(resolvedDir)) {
+        fs.mkdirSync(resolvedDir, { recursive: true });
+      }
+
+      // If the target folder is empty, copy default templates from the 'ini_templates' folder
+      const items = fs.readdirSync(resolvedDir);
+      if (items.length === 0) {
+        const defaultTemplatesDir = path.resolve(process.cwd(), "ini_templates");
+        if (fs.existsSync(defaultTemplatesDir) && defaultTemplatesDir !== resolvedDir) {
+          try {
+            copyDirectoryRecursive(defaultTemplatesDir, resolvedDir);
+          } catch (copyErr) {
+            console.error("Error copying default templates recursively:", copyErr);
+          }
+        }
+      }
+
+      const tree = getFilesTree(resolvedDir, resolvedDir);
+      res.json({ success: true, folderPath: resolvedDir, data: tree });
+    } catch (err: any) {
+      console.error("Error listing templates:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // API to save a template file locally on disk
+  app.post("/api/templates/save", (req, res) => {
+    try {
+      const { filePath, content, configuredDir } = req.body;
+      if (!filePath) {
+        return res.status(400).json({ success: false, error: "File path is required" });
+      }
+
+      const qDir = getTemplateFolder(configuredDir);
+      const resolvedDir = path.isAbsolute(qDir) ? qDir : path.resolve(process.cwd(), qDir);
+      const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(resolvedDir, filePath);
+
+      const parentDir = path.dirname(resolvedPath);
+      if (!fs.existsSync(parentDir)) {
+        fs.mkdirSync(parentDir, { recursive: true });
+      }
+
+      fs.writeFileSync(resolvedPath, content || "", "utf-8");
+      console.log(`Saved template to ${resolvedPath}`);
+      res.json({ success: true, message: "File saved successfully", path: resolvedPath });
+    } catch (err: any) {
+      console.error("Error saving template:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // API to create a file or folder in a configured folder path
+  app.post("/api/templates/create", (req, res) => {
+    try {
+      const { nodeName, parentPath, type, configuredDir } = req.body;
+      if (!nodeName) {
+        return res.status(400).json({ success: false, error: "Node name is required" });
+      }
+
+      const qDir = getTemplateFolder(configuredDir);
+      const resolvedDir = path.isAbsolute(qDir) ? qDir : path.resolve(process.cwd(), qDir);
+      
+      const parentResolved = parentPath 
+        ? (path.isAbsolute(parentPath) ? parentPath : path.resolve(resolvedDir, parentPath))
+        : resolvedDir;
+
+      const targetPath = path.join(parentResolved, nodeName);
+
+      if (type === 'folder') {
+        if (!fs.existsSync(targetPath)) {
+          fs.mkdirSync(targetPath, { recursive: true });
+        }
+      } else {
+        const parentDir = path.dirname(targetPath);
+        if (!fs.existsSync(parentDir)) {
+          fs.mkdirSync(parentDir, { recursive: true });
+        }
+        if (!fs.existsSync(targetPath)) {
+          fs.writeFileSync(targetPath, "", "utf-8");
+        }
+      }
+
+      const relativeToConfigured = path.relative(resolvedDir, targetPath);
+      res.json({ success: true, path: relativeToConfigured });
+    } catch (err: any) {
+      console.error("Error creating template node:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // API to delete a file or folder in a configured folder path
+  app.post("/api/templates/delete", (req, res) => {
+    try {
+      const { filePath, configuredDir } = req.body;
+      if (!filePath) {
+        return res.status(400).json({ success: false, error: "File path is required" });
+      }
+
+      const qDir = getTemplateFolder(configuredDir);
+      const resolvedDir = path.isAbsolute(qDir) ? qDir : path.resolve(process.cwd(), qDir);
+      const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(resolvedDir, filePath);
+
+      if (fs.existsSync(resolvedPath)) {
+        const stats = fs.statSync(resolvedPath);
+        if (stats.isDirectory()) {
+          fs.rmSync(resolvedPath, { recursive: true, force: true });
+        } else {
+          fs.unlinkSync(resolvedPath);
+        }
+        res.json({ success: true, message: "Node deleted successfully" });
+      } else {
+        res.status(404).json({ success: false, error: "Node not found on disk" });
+      }
+    } catch (err: any) {
+      console.error("Error deleting template node:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // 5. OneDrive Templates
   app.get("/api/onedrive/templates", (req, res) => {
     const q = req.query.q ? String(req.query.q) : "";
@@ -138,21 +401,26 @@ async function startServer() {
   // 6. Main LangGraph Chat & Orchestration Endpoint
   app.post("/api/chat", async (req, res) => {
     try {
-      const { message, chatHistory = [] } = req.body;
+      const { message, chatHistory = [], selectedTemplateAttachments, textMappings } = req.body;
       if (!message) {
         return res.status(400).json({ error: "Message content required" });
       }
 
+      // If multiple templates are sent, process sequentially for now, 
+      // or update LangGraphEngine to handle an array if necessary.
+      // Assuming for now it handles the first one for simplicity or needs update.
       const result = await LangGraphEngine.run(
         message,
         currentUploadedExcel ? currentUploadedExcel.path : null,
         currentUploadedExcel ? currentUploadedExcel.name : null,
-        chatHistory
+        chatHistory,
+        Array.isArray(selectedTemplateAttachments) ? selectedTemplateAttachments[0] : selectedTemplateAttachments,
+        textMappings
       );
 
       res.json({
         assistantMessage: result.assistantMessage,
-        generatedIni: result.generatedIni,
+        generatedInis: result.generatedInis,
         trace: result.trace,
         needsExcelUpload: result.needsExcelUpload,
         activeExcelName: currentUploadedExcel ? currentUploadedExcel.name : null

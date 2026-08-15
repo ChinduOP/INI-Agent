@@ -5,15 +5,16 @@ import { useChatStore } from '../store/chatStore';
 
 interface UploadProps {
   compact?: boolean;
+  onSuccess?: () => void;
 }
 
-export const Upload: React.FC<UploadProps> = ({ compact = false }) => {
+export const Upload: React.FC<UploadProps> = ({ compact = false, onSuccess }) => {
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const activeSessionId = useChatStore(s => s.activeSessionId);
   const setUploadedExcel = useChatStore(s => s.setUploadedExcel);
-  const isUploading = useChatStore(s => s.isUploading);
+  const isUploading = useChatStore(s => s.isUploading && s.activeSessionId === s.uploadingSessionId);
   const setUploading = useChatStore(s => s.setUploading);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -47,6 +48,7 @@ export const Upload: React.FC<UploadProps> = ({ compact = false }) => {
         setUploadedExcel(activeSessionId, data.file);
       }
       setSuccessMsg(`Uploaded ${file.name} (${data.summary?.modulesCount || 0} Modules)`);
+      if (onSuccess) onSuccess();
     } catch (err: any) {
       setError(err.message || 'Error uploading file');
     } finally {

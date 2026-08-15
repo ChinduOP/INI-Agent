@@ -1,9 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Paperclip, Send, Loader2, FileSpreadsheet, X, FolderTree } from 'lucide-react';
 import { useChatStore } from '../store/chatStore';
+import { useMappingStore } from '../store/mappingStore';
 import { Upload } from './Upload';
 
-export const InputBox: React.FC = () => {
+export const InputBox: React.FC = React.memo(() => {
   const [input, setInput] = useState('');
   const [showUploadDrawer, setShowUploadDrawer] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -11,9 +12,12 @@ export const InputBox: React.FC = () => {
   const activeSessionId = useChatStore(s => s.activeSessionId);
   const sessions = useChatStore(s => s.sessions);
   const addMessage = useChatStore(s => s.addMessage);
-  const isGenerating = useChatStore(s => s.isGenerating);
+  const isGenerating = useChatStore(s => s.isGenerating && s.activeSessionId === s.generatingSessionId);
   const setGenerating = useChatStore(s => s.setGenerating);
   const setOneDriveModalOpen = useChatStore(s => s.setOneDriveModalOpen);
+  const selectedIniFiles = useChatStore(s => s.selectedIniFiles);
+  const setSelectedIniFiles = useChatStore(s => s.setSelectedIniFiles);
+  const setActiveView = useChatStore(s => s.setActiveView);
 
   const activeSession = sessions.find(s => s.id === activeSessionId);
   const uploadedExcel = activeSession?.uploadedExcel;
@@ -27,11 +31,23 @@ export const InputBox: React.FC = () => {
   }, [input]);
 
   const handleSend = async () => {
-    if (!input.trim() || !activeSessionId || isGenerating) return;
+    if ((!input.trim() && selectedIniFiles.length === 0) || !activeSessionId || isGenerating) return;
 
-    const userMessageText = input.trim();
+    const userMessageText = input.trim() || `Generate INIs for: ${selectedIniFiles.map(f => f.filename).join(', ')}`;
+    const attachedInis = selectedIniFiles; // Capture current state
     setInput('');
+    setSelectedIniFiles([]); // Clear after sending
+    setShowUploadDrawer(false); // Close upload drawer when sending message
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
+
+    // Prepare attachments
+    const attachments = [];
+    if (uploadedExcel) {
+      attachments.push({ name: uploadedExcel.name, size: 0, path: uploadedExcel.path });
+    }
+    attachedInis.forEach(ini => {
+      attachments.push({ name: ini.filename, size: ini.content.length, path: ini.path });
+    });
 
     // Add user message
     addMessage(activeSessionId, {
@@ -39,11 +55,12 @@ export const InputBox: React.FC = () => {
       role: 'user',
       content: userMessageText,
       timestamp: Date.now(),
-      attachments: uploadedExcel ? [{ name: uploadedExcel.name, size: 0, path: uploadedExcel.path }] : undefined
+      attachments: attachments.length > 0 ? attachments : undefined
     });
 
     try {
       setGenerating(true);
+      const { globalMappings, tabularMappings } = useMappingStore.getState();
 
       // Call backend chat LangGraph endpoint
       const res = await fetch('/api/chat', {
@@ -51,7 +68,12 @@ export const InputBox: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: userMessageText,
-          chatHistory: activeSession?.messages || []
+          chatHistory: activeSession?.messages || [],
+          selectedTemplateAttachments: attachedInis,
+          textMappings: {
+            globalMappings,
+            tabularMappings
+          }
         })
       });
 
@@ -65,13 +87,9 @@ export const InputBox: React.FC = () => {
         role: 'assistant',
         content: data.assistantMessage,
         timestamp: Date.now(),
-        generatedIni: data.generatedIni,
+        generatedInis: data.generatedInis,
         trace: data.trace
       });
-
-      if (data.needsExcelUpload && !showUploadDrawer) {
-        setShowUploadDrawer(true);
-      }
     } catch (err: any) {
       addMessage(activeSessionId, {
         id: 'err_' + Date.now(),
@@ -92,7 +110,7 @@ export const InputBox: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 pb-6 pt-2">
+    <div className="w-full mx-auto px-4 pb-6 pt-2">
       {/* Active Attachment Banner */}
       {uploadedExcel && (
         <div className="mb-2 bg-gray-800/80 border border-gray-700 rounded-lg px-3 py-1.5 flex items-center justify-between text-xs text-gray-200">
@@ -111,6 +129,23 @@ export const InputBox: React.FC = () => {
         </div>
       )}
 
+      {selectedIniFiles.length > 0 && (
+        <div className="mb-2 bg-blue-900/30 border border-blue-800/50 rounded-lg px-3 py-1.5 flex items-center justify-between text-xs text-gray-200">
+          <div className="flex items-center gap-2 truncate">
+            <FolderTree className="w-4 h-4 text-blue-400 shrink-0" />
+            <span className="font-medium truncate">{selectedIniFiles.length} INI Templates selected</span>
+            <span className="text-gray-400 text-[11px] font-mono">({selectedIniFiles.map(f => f.filename).join(', ')})</span>
+          </div>
+          <button
+            onClick={() => setSelectedIniFiles([])}
+            className="text-gray-400 hover:text-white p-1 rounded transition-colors"
+            title="Detach INI Templates"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Upload Drawer Popout */}
       {showUploadDrawer && (
         <div className="mb-3 bg-[#242424] border border-gray-700 p-4 rounded-xl shadow-xl animate-in fade-in slide-in-from-bottom-2">
@@ -123,7 +158,7 @@ export const InputBox: React.FC = () => {
               <X className="w-4 h-4" />
             </button>
           </div>
-          <Upload />
+          <Upload onSuccess={() => setShowUploadDrawer(false)} />
         </div>
       )}
 
@@ -142,12 +177,12 @@ export const InputBox: React.FC = () => {
             <Paperclip className="w-5 h-5" />
           </button>
 
-          {/* OneDrive Templates Button */}
+          {/* Template Selector Button */}
           <button
             type="button"
             onClick={() => setOneDriveModalOpen(true)}
-            className="p-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-xl transition-colors hidden sm:inline-flex"
-            title="Browse Read-Only OneDrive INI Templates repository"
+            className="p-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-xl transition-colors inline-flex"
+            title="Select Template from Folder"
           >
             <FolderTree className="w-5 h-5" />
           </button>
@@ -159,7 +194,13 @@ export const InputBox: React.FC = () => {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={uploadedExcel ? "Ask INI Agent (e.g. 'Create Partner A 850 INI' or 'Partner B 856')..." : "Upload an Excel file or ask a question to begin..."}
+          placeholder={
+            selectedIniFiles.length > 0
+              ? `${selectedIniFiles.length} files selected. Click Send or press Enter to generate!`
+              : uploadedExcel
+              ? "Ask INI Agent (e.g. 'Create Partner A 850 INI' or 'Partner B 856')..."
+              : "Upload an Excel file or ask a question to begin..."
+          }
           rows={1}
           className="flex-1 max-h-[180px] bg-transparent text-gray-100 placeholder-gray-400 text-sm focus:outline-none resize-none py-2.5 px-3 leading-relaxed font-sans"
         />
@@ -169,10 +210,10 @@ export const InputBox: React.FC = () => {
           <button
             type="button"
             onClick={handleSend}
-            disabled={!input.trim() || isGenerating}
+            disabled={(!input.trim() && selectedIniFiles.length === 0) || isGenerating}
             className={`p-2 rounded-xl transition-all flex items-center justify-center ${
-              input.trim() && !isGenerating
-                ? 'bg-white text-black hover:bg-gray-200 shadow'
+              (input.trim() || selectedIniFiles.length > 0) && !isGenerating
+                ? 'bg-white text-black hover:bg-gray-200 shadow cursor-pointer'
                 : 'bg-gray-700 text-gray-500 cursor-not-allowed'
             }`}
             title="Send Message to LangGraph Orchestrator"
@@ -196,4 +237,4 @@ export const InputBox: React.FC = () => {
       </div>
     </div>
   );
-};
+});
