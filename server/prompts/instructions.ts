@@ -3,6 +3,7 @@ export const INSTRUCTIONS = `Generation Rules
 - Never remove comments.
 - Never reorder sections.
 - Never reorder keys.
+- No spaces before or after the equal sign (=). Format strictly as Key=Value
 - Preserve blank lines.
 - Preserve indentation.
 - Preserve formatting.

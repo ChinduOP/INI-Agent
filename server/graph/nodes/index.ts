@@ -456,9 +456,12 @@ export class GraphNodes {
         finalFilename = `${partner}_${baseTmplName}.ini`.replace(/_{2,}/g, "_");
       }
       
+      const cleanContent = LlmService.cleanIniFormat(generated.content || '');
+
       return { 
         filename: finalFilename,
-        content: generated.content,
+        content: cleanContent,
+
         templateContent: state.templateText || undefined,
         templatePath: state.selectedTemplatePath || undefined,
         isTemplateManuallyAttached: state.isTemplateManuallyAttached,

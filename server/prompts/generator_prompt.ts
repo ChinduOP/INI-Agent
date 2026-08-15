@@ -26,7 +26,7 @@ CRITICAL MANDATES:
 1. Preserve every comment (; ...) exactly as written. Do not remove or reorder comments.
 2. Preserve every [SECTION] exactly. Do not reorder sections or keys.
 3. VALIDATION FILE CREATION RULES: When generating a validation file, first check the Knowledge Base of the particular file and text mappings where we define the INI name mapping to extracted context fields. Accordingly, fetch the data from the extracted field map and map it to the value for the INI.
-4. For every key=value line: replace template placeholders (e.g. {tp activation key}, {class name}) with the extracted values from the knowledge context or text mappings. 
+4. For every key=value line: format strictly as Key=Value with NO spaces before or after the equal sign (=). Replace template placeholders (e.g. {tp activation key}, {class name}) with the extracted values from the knowledge context or text mappings. 
    - Map {tp activation key} or {TP KEY} to tradingPartnerKey.
    - Map {tp display name} to tradingPartnerName.
    - Map {class name} to ediParsers or ediCreators depending on the section.

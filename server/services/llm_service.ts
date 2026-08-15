@@ -664,7 +664,7 @@ IMPORTANT:
         return result;
       });
 
-      return generatedFiles;
+      return generatedFiles.map(f => ({ ...f, content: this.cleanIniFormat(f.content) }));
     }
 
     if (isValidationTemplate) {
@@ -925,7 +925,7 @@ IMPORTANT:
         }
       }));
 
-      return generatedFiles;
+      return generatedFiles.map(f => ({ ...f, content: this.cleanIniFormat(f.content) }));
     }
 
     if (isEdiBatchProfileTemplate) {
@@ -1077,7 +1077,7 @@ IMPORTANT:
         return fallback;
       }));
 
-      return generatedFiles;
+      return generatedFiles.map(f => ({ ...f, content: this.cleanIniFormat(f.content) }));
     }
 
     // Default flow for non-validation templates
@@ -1101,7 +1101,7 @@ IMPORTANT:
     }
 
     if (!ai) {
-      return [fallbackResult];
+      return [{ ...fallbackResult, content: this.cleanIniFormat(fallbackResult.content) }];
     }
 
     try {
@@ -1138,14 +1138,15 @@ IMPORTANT:
 
         const mergedContent = LlmService.mergeGeneratedWithTemplate(templateText, parsed.content || '');
         const resolvedContent = this.resolveBracketedPlaceholders(mergedContent, context, parsedExcelData);
+        const cleanedContent = this.cleanIniFormat(resolvedContent);
         return {
           filename: finalFilename,
-          content: resolvedContent
+          content: cleanedContent
         };
       });
     } catch (err: any) {
       console.error('Error generating INI via LLM, falling back to heuristic:', err);
-      return [fallbackResult];
+      return [{ ...fallbackResult, content: this.cleanIniFormat(fallbackResult.content) }];
     }
   }
 
@@ -1690,7 +1691,7 @@ IMPORTANT:
       if (eqIndex !== -1) {
         const key = line.substring(0, eqIndex).trim();
         const leadingSpace = line.substring(0, line.indexOf(key));
-        const originalRhs = line.substring(eqIndex + 1);
+        const originalRhs = line.substring(eqIndex + 1).trim();
 
         const mapKey = `${currentTmplSection}:${key.toLowerCase()}`;
         const genVal = genMap[mapKey];
@@ -1710,14 +1711,14 @@ IMPORTANT:
           outputLines.push(`${leadingSpace}${key}=${originalRhs}`);
         } else {
           // Keep the LLM generated RHS (which has the resolved value)
-          outputLines.push(`${leadingSpace}${key}= ${genVal}`);
+          outputLines.push(`${leadingSpace}${key}=${String(genVal).trim()}`);
         }
       } else {
         outputLines.push(line);
       }
     });
 
-    return outputLines.join('\n');
+    return outputLines.map(line => LlmService.normalizeIniAssignmentLine(line)).join('\n');
   }
 
   public static filenamesMatch(f1: string, f2: string): boolean {
@@ -1737,6 +1738,27 @@ IMPORTANT:
       }
     }
     return clean1.includes(clean2) || clean2.includes(clean1);
+  }
+
+  public static normalizeIniAssignmentLine(line: string): string {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith(';') || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      return line;
+    }
+
+    const match = line.match(/^(\s*)([^=;#\r\n]+?)(?:\s*)=(?:\s*)(.*)$/);
+    if (!match) {
+      return line;
+    }
+
+    const leading = match[1] || '';
+    const key = match[2].trim();
+    const value = match[3].trim();
+    return `${leading}${key}=${value}`;
+  }
+
+  public static cleanIniFormat(content: string): string {
+    return (content || '').split(/\r?\n/).map(line => LlmService.normalizeIniAssignmentLine(line)).join('\n');
   }
 
   public static resolveBracketedPlaceholders(
@@ -1900,9 +1922,9 @@ IMPORTANT:
       if (cleanRhs.startsWith('"') && cleanRhs.endsWith('"') && !cleanRhs.includes('{')) {
         cleanRhs = cleanRhs.replace(/"/g, '');
         if (preserveComments && comment) {
-          return `${key} = ${cleanRhs} //${comment}`;
+          return `${key}=${cleanRhs} //${comment}`;
         }
-        return `${key} = ${cleanRhs}`;
+        return `${key}=${cleanRhs}`;
       }
       
       const docLookupRegex = /DocLookup\(([^)]+)\)/gi;
@@ -1961,9 +1983,9 @@ IMPORTANT:
       finalRhs = finalRhs.replace(/"/g, ''); // Remove all double quotes as per user request
 
       if (preserveComments && comment) {
-        return `${key} = ${finalRhs} //${comment}`;
+        return `${key}=${finalRhs} //${comment}`;
       }
-      return `${key} = ${finalRhs}`;
+      return `${key}=${finalRhs}`;
     });
     return resolvedLines.filter(line => line !== '__DELETE_LINE__').join('\n');
   }
@@ -2475,11 +2497,11 @@ IMPORTANT:
           // No brackets. Check if it's a standard key that we should dynamically populate
           const keyLower = key.toLowerCase();
           if (keyLower === 'document' || keyLower === 'doctype' || keyLower === 'doc') {
-            val = ` ${docType}`;
+            val = `${docType}`;
           } else if (keyLower === 'direction' || keyLower === 'dir') {
-            val = ` ${lookupPool['Direction'] || dir}`;
+            val = `${lookupPool['Direction'] || dir}`;
           } else if (keyLower === 'tradingpartner' || keyLower === 'partner' || keyLower === 'partnername') {
-            val = ` ${context.tradingPartner}`;
+            val = `${context.tradingPartner}`;
           } else {
             // Keep the original template value! NEVER overwrite with 'I am not sure...'
             val = originalRhs;
@@ -2494,6 +2516,7 @@ IMPORTANT:
 
     let content = outputLines.join('\n');
     content = this.resolveBracketedPlaceholders(content, context, data, false, isEdiBatchProfile, isDocument);
+    content = this.cleanIniFormat(content); // Ensure strict spacing normalization
 
     // Determine filename
     let filename = `${context.tradingPartner}_${docType}_${dir}.ini`;
