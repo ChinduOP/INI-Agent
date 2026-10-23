@@ -1,0 +1,17 @@
+{
+  "description": "Master Excel Worksheet Reference Structure for INI Agent LangGraph Engine",
+  "worksheets": {
+    "Modules": {
+      "requiredColumns": ["ModuleName", "TradingPartner", "Environment", "Status", "DatabaseName"],
+      "description": "Maps EDI modules to trading partners and database schemas."
+    },
+    "EDI": {
+      "requiredColumns": ["Parameter", "PartnerA_Value", "PartnerB_Value"],
+      "description": "Stores ISA/GS envelope qualifiers, delimiters, AS2 IDs, and X12 versions."
+    },
+    "Document": {
+      "requiredColumns": ["DocType", "Partner", "Direction", "InboundPath", "OutboundPath", "ArchivePath"],
+      "description": "Defines filesystem routing for 850, 810, 856, 997 EDI document flows."
+    }
+  }
+}
