@@ -3,7 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Agent -INI Creator</title>
+    <title>INI Agent</title>
+    <meta name="description" content="LangGraph orchestration engine that generates production-ready .ini configuration files from Excel documents and OneDrive templates." />
+    <meta property="og:title" content="INI Agent" />
+    <meta property="og:description" content="LangGraph orchestration engine that generates production-ready .ini configuration files from Excel documents and OneDrive templates." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.svg" />
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('ini_agent_theme');
+          if (saved === 'light') {
+            document.documentElement.classList.remove('dark');
+          } else if (saved === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+            document.documentElement.classList.remove('dark');
+          } else {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

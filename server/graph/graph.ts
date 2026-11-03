@@ -21,6 +21,7 @@ export class LangGraphEngine {
       filename: string;
       path: string;
       content: string;
+      selectedFields?: string[];
     } | null,
     textMappings?: TextMappings,
   ): Promise<{
@@ -43,6 +44,7 @@ export class LangGraphEngine {
       templateText: selectedTemplateAttachment
         ? selectedTemplateAttachment.content
         : null,
+      selectedFields: selectedTemplateAttachment?.selectedFields,
       generatedINI: null,
       filename: null,
       validationResult: null,
@@ -105,12 +107,19 @@ export class LangGraphEngine {
     );
 
     let intentResult: { intent: "generate_ini" | "general_chat"; response?: string } = { intent: "generate_ini", response: undefined };
+    const reqLower = (userRequest || '').toLowerCase().trim();
+    const isSimpleGreeting = /^(hi|hello|hey|greetings|help|who are you|what can you do)[\s!\.]*$/i.test(reqLower);
+
     if (!selectedTemplateAttachment) {
-      intentResult = await LlmService.classifyIntentAndChat(
-        userRequest,
-        hasExcel,
-        chatHistory,
-      );
+      if (hasExcel || !isSimpleGreeting) {
+        intentResult = { intent: "generate_ini" };
+      } else {
+        intentResult = await LlmService.classifyIntentAndChat(
+          userRequest,
+          hasExcel,
+          chatHistory,
+        );
+      }
     }
 
     if (intentResult.intent === "general_chat") {
@@ -147,7 +156,7 @@ export class LangGraphEngine {
     update = await GraphNodes.excelReaderNode(state);
     state = { ...state, ...update };
 
-    if (state.currentNode === "ResponseNode" && !state.parsedExcelData) {
+    if (state.currentNode === "ResponseNode" && !state.parsedExcelData && !state.selectedTemplatePath && !selectedTemplateAttachment) {
       return {
         assistantMessage: `❌ Failed to parse the uploaded Excel file. Please ensure it is a valid .xlsx workbook with Modules, EDI, and Document sheets.`,
         trace: state.traceLog,
@@ -227,8 +236,8 @@ export class LangGraphEngine {
       state.generatedInis && state.generatedInis.length > 0
         ? state.generatedInis.map(g => ({
             ...g,
-            templateContent: state.templateText || undefined,
-            templatePath: state.selectedTemplatePath || undefined,
+            templateContent: g.templateContent || state.templateText || undefined,
+            templatePath: g.templatePath || state.selectedTemplatePath || undefined,
             isTemplateManuallyAttached: state.isTemplateManuallyAttached,
             validationSummary: state.validationResult || { isValid: true, errors: [], warnings: [], missingKeysCount: 0, todoCount: 0 },
             extractedContext: state.extractedContext || undefined,

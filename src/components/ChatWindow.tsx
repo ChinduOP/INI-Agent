@@ -38,14 +38,14 @@ export const ChatWindow: React.FC = () => {
 
   if (!activeSession) {
     return (
-      <div className="flex-1 bg-[#212121] flex items-center justify-center text-gray-400 text-sm">
+      <div className="flex-1 theme-surface flex items-center justify-center theme-muted text-sm">
         No active chat selected.
       </div>
     );
   }
 
   return (
-    <div className="flex-1 bg-[#212121] flex flex-col h-full overflow-hidden relative select-text">
+    <div className="flex-1 theme-surface flex flex-col h-full overflow-hidden relative select-text">
       <AiStatusIndicator />
       {/* Messages Scroll Area */}
       <div className="flex-1 overflow-y-auto w-full">
@@ -55,20 +55,20 @@ export const ChatWindow: React.FC = () => {
           ))}
           
           {isGenerating && (
-            <div className="w-full py-6 px-4 sm:px-6 flex gap-4 transition-colors bg-[#212121]">
-              <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-white shadow-md bg-gradient-to-br from-blue-600 to-indigo-700 ring-2 ring-blue-500/30">
-                <Bot className="w-5 h-5" />
+            <div className="w-full py-6 px-4 sm:px-6 flex gap-4 transition-colors bg-transparent">
+              <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center !text-white text-white shadow-md bg-gradient-to-br from-blue-600 to-indigo-700 ring-2 ring-blue-500/30">
+                <Bot className="w-5 h-5 !text-white text-white" />
               </div>
               <div className="flex-1 overflow-hidden pt-0.5 flex flex-col w-full max-w-full">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-xs font-semibold tracking-wide text-gray-300">
+                  <span className="text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400">
                     INI Agent
                   </span>
-                  <span className="inline-flex items-center gap-1 text-[10px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded font-mono border border-blue-500/20">
+                  <span className="inline-flex items-center gap-1 text-[10px] bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full font-mono border border-blue-200 dark:border-blue-800/60 font-semibold">
                     <Sparkles className="w-2.5 h-2.5" /> LangGraph Orchestrated
                   </span>
                 </div>
-                <div className="text-gray-100 font-sans break-words mt-1">
+                <div className="font-sans break-words mt-1">
                   <AnimatedStatusText />
                 </div>
               </div>
@@ -80,7 +80,7 @@ export const ChatWindow: React.FC = () => {
       </div>
 
       {/* Bottom Input Area */}
-      <div className="w-full shrink-0 bg-[#212121] border-t border-gray-800/40 z-10">
+      <div className="w-full shrink-0 theme-surface border-t theme-border z-10">
         <InputBox />
       </div>
     </div>

@@ -36,7 +36,7 @@ const upload = multer({ storage });
 
 async function startServer() {
   const app = express();
-  const PORT = 3001;
+  const PORT = 3000;
 
   app.use(express.json({ limit: "50mb" }));
 
@@ -143,6 +143,28 @@ async function startServer() {
     }
   });
 
+  app.post("/api/custom-context/extract", async (req, res) => {
+    try {
+      const { extractedData, definitions } = req.body || {};
+      if (!Array.isArray(extractedData) || !Array.isArray(definitions)) {
+        return res.status(400).json({ error: "Extracted Excel data and custom key definitions are required." });
+      }
+
+      const validDefinitions = definitions.filter((definition: any) =>
+        definition &&
+        typeof definition.keyName === "string" &&
+        typeof definition.prompt === "string" &&
+        definition.keyName.trim() &&
+        definition.prompt.trim()
+      );
+      const values = await LlmService.extractCustomContextValues(extractedData, validDefinitions);
+      res.json({ success: true, values });
+    } catch (err: any) {
+      console.error("Error extracting custom context values:", err);
+      res.status(500).json({ error: err.message || "Failed to extract custom context values." });
+    }
+  });
+
   // Helper to determine the template folder path (defaulting to ONEDRIVE_TEMPLATES_LINK from .env)
   function getTemplateFolder(queryDir?: any, forDisplay = false): string {
     if (queryDir && String(queryDir).trim()) {
@@ -202,21 +224,21 @@ async function startServer() {
             name: item,
             type: 'folder',
             path: relativePath,
-            isOpen: true,
+            isOpen: false,
             children
           });
         } else {
           const ext = path.extname(item).toLowerCase().replace('.', '');
-          // Read content only if it's an editable text file (like .ini, .sql, .txt, .json, .md)
+          // Read content only if it's an editable text file (like .ini, .sql, .xml, .txt, .json, .md)
           let content = '';
-          if (['ini', 'sql', 'txt', 'json', 'md'].includes(ext)) {
+          if (['ini', 'sql', 'xml', 'txt', 'json', 'md'].includes(ext)) {
             content = fs.readFileSync(fullPath, 'utf-8');
           }
           nodes.push({
             id,
             name: item,
             type: 'file',
-            fileType: ext === 'sql' ? 'sql' : 'ini',
+            fileType: ext === 'sql' ? 'sql' : ext === 'xml' ? 'xml' : ext === 'json' ? 'json' : 'ini',
             content,
             path: relativePath
           });
@@ -409,20 +431,53 @@ async function startServer() {
       // If multiple templates are sent, process sequentially for now, 
       // or update LangGraphEngine to handle an array if necessary.
       // Assuming for now it handles the first one for simplicity or needs update.
-      const result = await LangGraphEngine.run(
-        message,
-        currentUploadedExcel ? currentUploadedExcel.path : null,
-        currentUploadedExcel ? currentUploadedExcel.name : null,
-        chatHistory,
-        Array.isArray(selectedTemplateAttachments) ? selectedTemplateAttachments[0] : selectedTemplateAttachments,
-        textMappings
-      );
+      let attachments = Array.isArray(selectedTemplateAttachments) ? selectedTemplateAttachments : [selectedTemplateAttachments];
+      if (attachments.length === 0) attachments = [null];
+      
+      let allGeneratedInis: any[] = [];
+      let finalAssistantMessage = '';
+      let finalTrace: any[] = [];
+      let needsExcelUpload = false;
+      
+      const results = await Promise.all(attachments.map(attachment => 
+          LangGraphEngine.run(
+            message,
+            currentUploadedExcel ? currentUploadedExcel.path : null,
+            currentUploadedExcel ? currentUploadedExcel.name : null,
+            chatHistory,
+            attachment,
+            textMappings
+          )
+      ));
+      
+        // Deduplicate generated INIs strictly by filename (case-insensitive) across all runs
+        const seenGeneratedFiles = new Set<string>();
+        for (const result of results) {
+          if (result.generatedInis && result.generatedInis.length > 0) {
+            for (const item of result.generatedInis) {
+              const fileKey = (item.filename || '').toLowerCase().trim();
+              if (fileKey && !seenGeneratedFiles.has(fileKey)) {
+                seenGeneratedFiles.add(fileKey);
+                allGeneratedInis.push(item);
+              }
+            }
+          }
+          if (result.assistantMessage && !finalAssistantMessage.includes(result.assistantMessage)) {
+              finalAssistantMessage += (finalAssistantMessage ? '\n' : '') + result.assistantMessage;
+          }
+          if (result.trace) {
+              finalTrace.push(...result.trace);
+          }
+          if (result.needsExcelUpload) {
+              needsExcelUpload = true;
+          }
+      }
 
       res.json({
-        assistantMessage: result.assistantMessage,
-        generatedInis: result.generatedInis,
-        trace: result.trace,
-        needsExcelUpload: result.needsExcelUpload,
+        assistantMessage: finalAssistantMessage || 'Processing complete.',
+        generatedInis: allGeneratedInis,
+        trace: finalTrace,
+        needsExcelUpload: needsExcelUpload,
         activeExcelName: currentUploadedExcel ? currentUploadedExcel.name : null
       });
     } catch (err: any) {

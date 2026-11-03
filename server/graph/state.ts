@@ -15,8 +15,10 @@ export interface ValidationSummary {
 export interface GeneratedIniResult {
   filename: string;
   content: string;
+  sourceSheet?: "EDI" | "Document";
   templateContent?: string;
   templatePath?: string;
+  downloadPath?: string;
   validationSummary: ValidationSummary;
   extractedContext?: ExtractedKnowledgeContext;
   parsedExcelData?: ParsedExcelData;
@@ -54,12 +56,17 @@ export interface ExtractedKnowledgeContext {
   tradingPartner: string;
   tradingPartnerKey?: string;
   tradingPartnerName?: string;
+  tradingPartnerDisplayName?: string;
+  tradingPartnerNameWS?: string;
+  globalKeys?: Record<string, string>;
   ediParsers?: string;
   ediCreators?: string;
   classifications?: string;
   subtypes?: string;
   validationFilenames?: string;
   documentTypes: string[];
+  document?: any[];
+  edi?: any[];
   customMappings?: Record<string, string>;
   dictionary?: Record<string, string>;
   transactionMappings?: Record<string, Record<string, string>>;
@@ -100,4 +107,5 @@ export interface LangGraphState {
   generalAnswer?: string;
   textMappings?: TextMappings;
   isTemplateManuallyAttached?: boolean;
+  selectedFields?: string[];
 }

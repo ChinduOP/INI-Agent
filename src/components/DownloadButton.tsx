@@ -18,6 +18,7 @@ export const DownloadButton: React.FC<DownloadButtonProps> = ({
 }) => {
   const [downloading, setDownloading] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
+  const isSqlFile = /\.sql$/i.test(filename);
 
   const handleDownload = async () => {
     try {
@@ -28,9 +29,9 @@ export const DownloadButton: React.FC<DownloadButtonProps> = ({
         const files = JSON.parse(content || '[]');
         const zip = new JSZip();
         files.forEach((f: any) => {
-          // As per rule: for download create folders with zip file format following path (/TP Root/Validations/Documents)
-          const folderPath = 'TP Root/Validations/Documents/';
-          const cleanFilename = f.filename.replace(/^.*[\\\/]/, ''); // Strip any existing path from filename
+          let folderPath = f.downloadPath || 'Unknown partner/Profiles/Documents';
+          if (!folderPath.endsWith('/')) folderPath += '/';
+          const cleanFilename = f.filename.replace(/^.*[\\\/]/, '');
           zip.file(`${folderPath}${cleanFilename}`, f.content);
         });
         const blob = await zip.generateAsync({ type: 'blob' });
@@ -54,23 +55,23 @@ export const DownloadButton: React.FC<DownloadButtonProps> = ({
     <button
       onClick={handleDownload}
       disabled={downloading}
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-sm disabled:opacity-50 ${className}`}
-      title={isZip ? "Download ZIP archive of all configurations" : "Download INI file"}
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-600 hover:bg-emerald-700 !text-white text-white transition-colors shadow-sm disabled:opacity-50 cursor-pointer ${className}`}
+      title={isZip ? "Download ZIP archive of all configurations" : isSqlFile ? "Download SQL file" : "Download INI file"}
     >
       {downloading ? (
         <>
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          <span>Streaming...</span>
+          <Loader2 className="w-3.5 h-3.5 animate-spin !text-white text-white" />
+          <span className="!text-white text-white">Streaming...</span>
         </>
       ) : downloaded ? (
         <>
           <Check className="w-3.5 h-3.5 text-emerald-200" />
-          <span>Downloaded</span>
+          <span className="text-emerald-100">Downloaded</span>
         </>
       ) : (
         <>
-          <Download className="w-3.5 h-3.5" />
-          <span>{isZip ? 'Download ZIP' : 'Download INI'}</span>
+          <Download className="w-3.5 h-3.5 !text-white text-white" />
+          <span className="!text-white text-white font-medium">{isZip ? 'Download ZIP' : isSqlFile ? 'Download SQL' : 'Download INI'}</span>
         </>
       )}
     </button>

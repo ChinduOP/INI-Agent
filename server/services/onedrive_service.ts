@@ -47,7 +47,7 @@ class OneDriveService {
           // Since it's for LLM or preview, we'll try to read as utf-8, but if it's binary it might be garbage. 
           // Let's just read it anyway for now, or just provide filename and empty content if binary.
           try {
-             if (item.toLowerCase().endsWith('.ini') || item.toLowerCase().endsWith('.txt') || item.toLowerCase().endsWith('.csv') || item.toLowerCase().endsWith('.json') || item.toLowerCase().endsWith('.md')) {
+             if (item.toLowerCase().endsWith('.ini') || item.toLowerCase().endsWith('.xml') || item.toLowerCase().endsWith('.sql') || item.toLowerCase().endsWith('.txt') || item.toLowerCase().endsWith('.csv') || item.toLowerCase().endsWith('.json') || item.toLowerCase().endsWith('.md')) {
                 content = fs.readFileSync(fullPath, 'utf-8');
              } else {
                 content = "Binary or unsupported text file. Filename: " + item;
@@ -69,10 +69,35 @@ class OneDriveService {
     }
   }
 
+  private copyRecursiveSync(src: string, dest: string) {
+    if (!fs.existsSync(src)) return;
+    if (!fs.existsSync(dest)) {
+      fs.mkdirSync(dest, { recursive: true });
+    }
+    const entries = fs.readdirSync(src, { withFileTypes: true });
+    for (const entry of entries) {
+      const srcPath = path.join(src, entry.name);
+      const destPath = path.join(dest, entry.name);
+      if (entry.isDirectory()) {
+        this.copyRecursiveSync(srcPath, destPath);
+      } else {
+        try {
+          fs.copyFileSync(srcPath, destPath);
+        } catch (_) {}
+      }
+    }
+  }
+
   public getAllTemplates(): IniTemplateFile[] {
     const localTemplates: IniTemplateFile[] = [];
 
-    // 1. Check path provided in env variable FIRST
+    // 1. Scan workspace 'ini_templates' directory FIRST to ensure all built-in templates exist
+    const workspaceTemplatesDir = path.join(process.cwd(), 'ini_templates');
+    if (fs.existsSync(workspaceTemplatesDir) && fs.statSync(workspaceTemplatesDir).isDirectory()) {
+      this.scanLocalDirectory(workspaceTemplatesDir, workspaceTemplatesDir, localTemplates);
+    }
+
+    // 2. Check path provided in env variable (ONEDRIVE_TEMPLATES_LINK)
     let link = process.env.ONEDRIVE_TEMPLATES_LINK;
     if (link) {
       link = link.replace(/^["']|["']$/g, '').trim();
@@ -94,38 +119,24 @@ class OneDriveService {
 
       if (fs.existsSync(resolvedLink) && fs.statSync(resolvedLink).isDirectory()) {
         const items = fs.readdirSync(resolvedLink);
-        if (items.length === 0) {
-          const defaultTemplatesDir = path.resolve(process.cwd(), "ini_templates");
-          if (fs.existsSync(defaultTemplatesDir) && defaultTemplatesDir !== resolvedLink) {
-            try {
-              const defaults = fs.readdirSync(defaultTemplatesDir);
-              for (const file of defaults) {
-                const src = path.join(defaultTemplatesDir, file);
-                const dest = path.join(resolvedLink, file);
-                if (fs.statSync(src).isFile()) {
-                  fs.copyFileSync(src, dest);
-                }
-              }
-            } catch (copyErr) {
-              console.error("Error copying default templates:", copyErr);
+        if (items.length === 0 && fs.existsSync(workspaceTemplatesDir)) {
+          this.copyRecursiveSync(workspaceTemplatesDir, resolvedLink);
+        }
+        
+        // Scan the OneDrive link directory as well if it's different from workspaceTemplatesDir
+        if (resolvedLink !== workspaceTemplatesDir) {
+          const customTemplates: IniTemplateFile[] = [];
+          this.scanLocalDirectory(resolvedLink, resolvedLink, customTemplates);
+          // Merge custom templates, overwriting defaults if path matches
+          for (const ct of customTemplates) {
+            const idx = localTemplates.findIndex(t => t.path.toLowerCase() === ct.path.toLowerCase());
+            if (idx !== -1) {
+              localTemplates[idx] = ct;
+            } else {
+              localTemplates.push(ct);
             }
           }
-
-          // Ensure sample.ini exists if folder is still empty
-          const sampleFile = path.join(resolvedLink, "sample.ini");
-          if (!fs.existsSync(sampleFile) && fs.readdirSync(resolvedLink).length === 0) {
-            fs.writeFileSync(sampleFile, "; Sample Template\n[Section]\nKey = Value\n", "utf-8");
-          }
         }
-        this.scanLocalDirectory(resolvedLink, resolvedLink, localTemplates);
-      }
-    }
-
-    // 2. If ONEDRIVE_TEMPLATES_LINK is not set, or failed to yield files, check workspace 'ini_templates' directory as fallback
-    if (localTemplates.length === 0) {
-      const workspaceTemplatesDir = path.join(process.cwd(), 'ini_templates');
-      if (fs.existsSync(workspaceTemplatesDir) && fs.statSync(workspaceTemplatesDir).isDirectory()) {
-        this.scanLocalDirectory(workspaceTemplatesDir, workspaceTemplatesDir, localTemplates);
       }
     }
 

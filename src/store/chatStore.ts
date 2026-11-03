@@ -5,7 +5,7 @@ export interface TemplateFileNode {
   id: string;
   name: string;
   type: 'folder' | 'file';
-  fileType?: 'ini' | 'sql';
+  fileType?: 'ini' | 'sql' | 'xml' | 'txt' | 'json' | string;
   content?: string;
   children?: TemplateFileNode[];
   isOpen?: boolean;
@@ -28,18 +28,20 @@ interface ChatStore {
   generatingSessionId: string | null;
   uploadingSessionId: string | null;
   isOneDriveModalOpen: boolean;
-  selectedIniFiles: { filename: string; path: string; content: string }[];
+  selectedIniFiles: { filename: string; path: string; content: string; selectedFields?: string[] }[];
   activeView: 'chat' | 'templates';
   fileSystem: TemplateFileNode[];
   templateFolderPath: string;
   
   // Actions
+  theme: 'dark' | 'light';
+  toggleTheme: () => void;
   createNewSession: () => void;
   setActiveSession: (id: string) => void;
   setActiveView: (view: 'chat' | 'templates') => void;
   toggleSidebar: () => void;
   setOneDriveModalOpen: (open: boolean) => void;
-  setSelectedIniFiles: (files: { filename: string; path: string; content: string }[]) => void;
+  setSelectedIniFiles: (files: { filename: string; path: string; content: string; selectedFields?: string[] }[]) => void;
   setFileSystem: (fs: TemplateFileNode[]) => void;
   setTemplateFolderPath: (path: string) => void;
   loadLocalTemplates: (path?: string) => Promise<void>;
@@ -59,6 +61,19 @@ const INITIAL_WELCOME_MESSAGE: ChatMessage = {
   content: `Hello 👋\n\nI'm your INI Agent.\n\nI can:\n\n• Analyze uploaded Excel files\n• Read Modules, EDI and Document sheets\n• Search your custom template repository\n• Choose the best matching INI template\n• Generate production-ready INI files\n• Preserve template formatting\n• Validate generated configuration\n\nUpload an Excel file to begin.`
 };
 
+const getInitialTheme = (): 'dark' | 'light' => {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('ini_agent_theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        return 'light';
+      }
+    } catch (_) {}
+  }
+  return 'dark';
+};
+
 export const useChatStore = create<ChatStore>((set, get) => {
   const initialSessionId = 'session_' + Date.now();
   const initialSession: ChatSession = {
@@ -68,6 +83,15 @@ export const useChatStore = create<ChatStore>((set, get) => {
     messages: [INITIAL_WELCOME_MESSAGE],
     uploadedExcel: null
   };
+
+  const initialTheme = getInitialTheme();
+  if (typeof document !== 'undefined') {
+    if (initialTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }
 
   return {
     sessions: [initialSession],
@@ -80,8 +104,24 @@ export const useChatStore = create<ChatStore>((set, get) => {
     isOneDriveModalOpen: false,
     selectedIniFiles: [],
     activeView: 'chat',
+    theme: initialTheme,
     fileSystem: initialTemplateFiles,
     templateFolderPath: 'ini_templates',
+    
+    toggleTheme: () => set(state => {
+      const newTheme = state.theme === 'dark' ? 'light' : 'dark';
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('ini_agent_theme', newTheme);
+        } catch (_) {}
+        if (newTheme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+      return { theme: newTheme };
+    }),
 
     setTemplateFolderPath: (path: string) => {
       set({ templateFolderPath: path });
@@ -111,7 +151,19 @@ export const useChatStore = create<ChatStore>((set, get) => {
         if (res.ok) {
           const result = await res.json();
           if (result.success && result.data) {
-            set({ fileSystem: result.data });
+            const collapseAllByDefault = (nodes: any[]): any[] => {
+              return nodes.map(n => {
+                if (n.type === 'folder') {
+                  return {
+                    ...n,
+                    isOpen: false,
+                    children: n.children ? collapseAllByDefault(n.children) : []
+                  };
+                }
+                return n;
+              });
+            };
+            set({ fileSystem: collapseAllByDefault(result.data) });
           }
         }
       } catch (err) {

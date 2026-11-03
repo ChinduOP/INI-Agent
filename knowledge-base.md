@@ -88,6 +88,17 @@ This file contains rules, conditions, and instructions for generating different 
 - **Key Rules**:
   - Rule 1: [e.g., Section Z is mandatory]
 
+### Type: DCP XML (*.xml)
+- **Description**: DCP XML Configuration and Schema Definition files
+- **FilePath**: "TP.PACK-ISO\DCP (xml)"
+- **Key Rules**:
+  - Folder path: `TP.PACK-ISO\DCP (xml)`
+  - Filename conventions:
+    i. If user uploaded an Excel sheet: Get key `Document_ValidationFile` (or `Document_Validation File`), prepend `DCP.` and append `.xml` (Format: `DCP.{Document_ValidationFile}.xml`). Match the exact template based on the validation file name (e.g. `INV.` maps to `INV.xml`, `ASN.` maps to `ASN.xml`). If multiple matching records exist (e.g., two ASN rows), generate separate XML files for each.
+    ii. If user has not uploaded an Excel sheet: Output filename must be the actual filename from the folder (e.g. `INV.xml`).
+  - Without any comments: Remove all XML comments (`<!-- ... -->`), inline comments, block comments, and headers completely.
+  - Remove empty lines: Remove all empty lines so no blank lines remain in the output.
+
 ### Type: ActivationDefaulter.ini
 - **Description**: [Description of Type B]
   **FilePath**: "C:\Users\chinduprasak\Documents\Local_Hub\TP.PACK-ISO\Modules\ActivationDefaulters"

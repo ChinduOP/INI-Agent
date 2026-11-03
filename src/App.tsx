@@ -33,7 +33,7 @@ export default function App() {
   }, [setTemplateFolderPath, loadLocalTemplates]);
 
   return (
-    <div className="flex h-screen w-screen bg-[#212121] text-gray-100 font-sans overflow-hidden antialiased">
+    <div className="theme-app flex h-screen w-screen font-sans overflow-hidden antialiased transition-colors">
       <Sidebar />
       <main className="flex-1 flex flex-col h-full min-w-0 relative">
         {activeView === 'templates' ? (

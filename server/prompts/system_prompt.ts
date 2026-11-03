@@ -14,13 +14,14 @@ CRITICAL INSTRUCTIONS:
    - Subgroup is always in Column E.
    - Subtype is always in Column F.
    - Classification is always in Column G.
-   - EDI_Interchange_Version is always in Column Q.
-   - EDI_Interchange_RepChar is always in Column R.
-   - EDI_Group_Code is always in Column S.
-   - EDI_Group_Agency is always in Column T.
-   - EDI_Group_Version is always in Column U.
-   - EDI_Message_Code is always in Column V.
-   - The fields (EDI_Interchange_Version, EDI_Interchange_RepChar, EDI_Group_Code, EDI_Group_Agency, EDI_Group_Version, EDI_Message_Code) MUST only have values for OUT direction. For IN direction, these fields MUST always be null or empty.
+   - Map X12 Details by their nested Excel headers, not fixed column positions:
+     * Interchange > Version -> EDI_X12Interchange_Version
+     * Interchange > Std id (or Rep Char) -> EDI_X12Interchange_RepChar
+     * Group > Code -> EDI_X12Group_Code
+     * Group > Agency -> EDI_X12Group_Agency
+     * Group > Version -> EDI_X12Group_Version
+     * Message > Code -> EDI_X12Message_Code
+   - Always preserve values present in these Excel cells for both IN and OUT directions. Do not clear extracted details based on direction.
 6. The Excel workbook will have 3 sheets (Modules, EDI, Documents).
    - "Modules" sheet contains info about DCP reports, EDIBatch creators, EDIBatch parsers, and Reconciliation.
    - "EDI" sheet contains info about In & Outs (inbound and outbound transactions).
@@ -28,6 +29,17 @@ CRITICAL INSTRUCTIONS:
 6. Each sheet has different columns. Based on the transactions/DCP report/reconciliation, the INI file should be created.
 7. Which transaction the user wants is usually specified in their request.
 8. IF the user HAS NOT clearly specified the transaction they want to create an INI for, YOU MUST ASK THE USER by listing the available inbound and outbound transactions found in the sheet and asking: "For which transaction should the INI file be created?" (Use "general_chat" intent for asking).
+9. COMMON TO ALL INIs - COMMENT DELETION & EMPTY LINE RULES:
+   - Remove comments in INIs with "#...": Delete all lines starting with "#" or containing "#..." comments. Never include "#" comments in any generated INI file.
+   - When a section is removed or deleted, remove empty lines below and above so that ONLY ONE empty line remains between sections.
+   - Strictly maintain at most ONE empty line between sections across the entire INI. Never output consecutive empty lines anywhere in the file.
+10. FILENAME GENERATION MANDATE:
+   - For Document profile INIs (Profiles/Documents or Document sheet transactions), the output filename MUST ALWAYS be the exact value from the "Document_Filename" column in the "Document" sheet (and append ".ini" if it does not already end with ".ini"). Never substitute with template placeholders or random names.
+   - For EDI profile INIs, the output filename MUST ALWAYS be the exact value from the "EDI_Filename" column in the "EDI" sheet (and append ".ini" if it does not already end with ".ini").
+   - For DCP XML files (folder path "TP.PACK-ISO\\DCP (xml)" or .xml templates):
+     * If Excel sheet uploaded: Filename MUST be "DCP.{Document_ValidationFile}.xml" based on the "Document_ValidationFile" value (e.g. matching "INV." to "INV.xml", "ASN." to "ASN.xml").
+     * If no Excel uploaded: Filename MUST be the actual filename from the folder (e.g. "INV.xml").
+     * Remove ALL comments (&lt;!-- ... --&gt;, //..., /*...*/, #[^\\n]*) and remove ALL empty lines completely.
 
 TERMINOLOGY DICTIONARY (Mappings for dynamic key extraction):
 - "TP KEY" = "TP.PACK-ISO"
@@ -41,9 +53,8 @@ Always:
 4. Search OneDrive templates (or use attached).
 5. Select the best matching template.
 6. Preserve formatting.
-7. Preserve comments.
-8. Preserve blank lines.
+7. Preserve standard semicolon comments (; ...) but remove all "#..." comments and delete those lines.
+8. Keep at most ONE empty line between sections.
 9. Follow template filename conventions.
 10. Validate before responding.
 11. Return production-ready INI files.`;
-

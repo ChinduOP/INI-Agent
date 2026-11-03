@@ -27,12 +27,12 @@ export const AiStatusIndicator: React.FC = () => {
   }, []);
 
   return (
-    <div className="absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1b1b1b] border border-gray-800 shadow-md transition-all group hover:bg-[#252525]">
-      {status === 'loading' && <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />}
+    <div className="absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-[#1b1b1b] border border-gray-200 dark:border-gray-800 shadow-md transition-all group hover:bg-gray-100 dark:hover:bg-[#252525]">
+      {status === 'loading' && <Loader2 className="w-4 h-4 text-gray-500 dark:text-gray-400 animate-spin" />}
       {status === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
       {status === 'error' && <XCircle className="w-4 h-4 text-red-500" />}
       
-      <span className={`text-xs font-medium tracking-wide ${status === 'success' ? 'text-gray-300' : status === 'error' ? 'text-red-400' : 'text-gray-400'}`}>
+      <span className={`text-xs font-medium tracking-wide ${status === 'success' ? 'text-gray-700 dark:text-gray-300' : status === 'error' ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
         {status === 'loading' ? 'Checking AI...' : status === 'success' ? 'AI Ready' : 'AI Error'}
       </span>
 

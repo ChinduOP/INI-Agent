@@ -1,1 +1,93 @@
 @import "tailwindcss";
+
+:root {
+	color-scheme: light;
+	--app-bg: #f5f7fa;
+	--surface: #ffffff;
+	--surface-muted: #eef2f6;
+	--surface-elevated: #ffffff;
+	--surface-hover: #e8edf3;
+	--input-bg: #ffffff;
+	--editor-bg: #f8fafc;
+	--editor-panel: #eef2f6;
+	--text-primary: #17212f;
+	--text-secondary: #3f4d60;
+	--text-muted: #657386;
+	--text-disabled: #9aa6b5;
+	--border: #d7e0ea;
+	--border-strong: #b7c4d2;
+	--overlay: rgb(15 23 42 / 45%);
+}
+
+:root.dark {
+	color-scheme: dark;
+	--app-bg: #212121;
+	--surface: #171717;
+	--surface-muted: #1f1f1f;
+	--surface-elevated: #242424;
+	--surface-hover: #2b2b2b;
+	--input-bg: #2f2f2f;
+	--editor-bg: #090909;
+	--editor-panel: #141414;
+	--text-primary: #f3f4f6;
+	--text-secondary: #d1d5db;
+	--text-muted: #9ca3af;
+	--text-disabled: #6b7280;
+	--border: #374151;
+	--border-strong: #4b5563;
+	--overlay: rgb(0 0 0 / 70%);
+}
+
+html,
+body,
+#root {
+	min-height: 100%;
+	background: var(--app-bg);
+	color: var(--text-primary);
+}
+
+body {
+	margin: 0;
+	transition: background-color 180ms ease, color 180ms ease;
+}
+
+@layer base {
+	button,
+	input,
+	textarea,
+	select {
+		color: inherit;
+	}
+
+	input:focus,
+	input:focus-visible,
+	textarea:focus,
+	textarea:focus-visible {
+		outline: none !important;
+		box-shadow: none !important;
+	}
+}
+
+/* Semantic tokens used by the application surfaces. */
+.theme-app { background-color: var(--app-bg); color: var(--text-primary); }
+.theme-surface { background-color: var(--surface); color: var(--text-primary); }
+.theme-surface-muted { background-color: var(--surface-muted); color: var(--text-primary); }
+.theme-surface-elevated { background-color: var(--surface-elevated); color: var(--text-primary); }
+.theme-surface-hover:hover { background-color: var(--surface-hover); }
+.theme-input { background-color: var(--input-bg); color: var(--text-primary); }
+.theme-editor { background-color: var(--editor-bg); color: var(--text-primary); }
+.theme-editor-panel { background-color: var(--editor-panel); color: var(--text-primary); }
+.theme-primary { color: var(--text-primary); }
+.theme-secondary { color: var(--text-secondary); }
+.theme-muted { color: var(--text-muted); }
+.theme-disabled { color: var(--text-disabled); }
+.theme-border { border-color: var(--border); }
+.theme-border-strong { border-color: var(--border-strong); }
+.theme-overlay { background-color: var(--overlay); }
+
+/* Scrollbars stay readable in either mode. */
+* {
+	scrollbar-color: var(--border-strong) transparent;
+	scrollbar-width: thin;
+}
+@custom-variant dark (&:where(.dark, .dark *));
